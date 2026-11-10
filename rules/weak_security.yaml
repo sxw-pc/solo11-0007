@@ -1,0 +1,297 @@
+category: weak_security
+version: 1
+rules:
+  - id: WS-001
+    name: 文件权限过宽
+    severity: high
+    description: 配置将文件权限设置为 777，任意本地用户均可读写执行。
+    remediation: 将权限收紧为 600 或 640，并仅授权必要账号。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b(?:chmod|file_mode|permissions?|mode)\b\s*[:= ]+\s*["']?0?777\b
+  - id: WS-002
+    name: 密码最小长度不足
+    severity: medium
+    description: 密码最小长度低于 8 位，显著降低暴力猜测成本。
+    remediation: 将 password_min_length 调整为至少 8，建议 12 以上。
+    match:
+      type: range
+      keys: [password_min_length, min_password_length, min_pwd_length]
+      min_value: 0
+      max_value: 7
+  - id: WS-003
+    name: 会话超时过短或异常
+    severity: low
+    description: 会话超时配置过低，可能影响访问控制稳定性或表明配置不完整。
+    remediation: 按业务设置合理的会话空闲超时，例如 900 至 3600 秒。
+    match:
+      type: range
+      keys: [session_timeout, idle_timeout]
+      min_value: 0
+      max_value: 299
+  - id: WS-004
+    name: 数据库允许任意远程来源
+    severity: high
+    description: 数据库远程访问来源被配置为百分号通配，任意主机均可尝试连接。
+    remediation: 将来源限制为明确的应用服务器地址，并配合 TLS 与强认证。
+    match:
+      type: regex
+      pattern: >-
+        (?i)(?:\b(?:allow_remote|remote_access|bind_address)\b\s*[:=]\s*["']?(?:%|0\.0\.0\.0)|GRANT\s+.+\s+TO\s+.+@["']?%)
+  - id: WS-005
+    name: 调试模式开启
+    severity: medium
+    description: 服务调试模式处于开启状态，可能泄露堆栈、变量或内部路径。
+    remediation: 在生产配置中设置 debug = false。
+    match:
+      type: key
+      keys: [debug, debug_mode]
+      value_pattern: >-
+        (?i)^(?:true|1|on|yes)$
+  - id: WS-006
+    name: 启用已淘汰的 SSLv3
+    severity: high
+    description: SSLv3 存在已知协议缺陷，不应在任何环境启用。
+    remediation: 禁用 SSLv3，最低使用 TLS 1.2。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b(?:ssl_protocol|ssl_version|tls_version|protocol)\b\s*[:=]\s*["']?SSLv3\b
+  - id: WS-007
+    name: 启用不安全的 TLS 1.0
+    severity: high
+    description: TLS 1.0 已不满足现代安全基线，存在兼容性攻击风险。
+    remediation: 将最低协议版本提升至 TLS 1.2，优先 TLS 1.3。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b(?:ssl_protocol|ssl_version|tls_version|protocol|min_version)\b\s*[:=]\s*["']?(?:TLSv1(?:\.0)?|TLS1(?:\.0)?)(?!\.\d)\b
+  - id: WS-008
+    name: 匿名访问开启
+    severity: high
+    description: 服务允许匿名访问，未认证用户可能读取或操作资源。
+    remediation: 关闭匿名访问，要求经过认证的账号才能访问。
+    match:
+      type: key
+      keys: [anonymous_access, allow_anonymous, anonymous_enable]
+      value_pattern: >-
+        (?i)^(?:true|1|on|yes)$
+  - id: WS-009
+    name: 管理后台认证关闭
+    severity: high
+    description: 管理后台或关键接口的认证开关被显式关闭。
+    remediation: 开启认证并要求强口令或多因素认证。
+    match:
+      type: key
+      keys: [admin_auth, auth_required, authentication]
+      value_pattern: >-
+        (?i)^(?:false|0|off|no|none)$
+  - id: WS-010
+    name: CORS 允许任意来源
+    severity: medium
+    description: 跨域来源被设置为星号，可能允许任意站点读取敏感响应。
+    remediation: 明确列出可信来源，不要使用通配符。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b(?:allow_origin|allowed_origins|cors_origins?)\b\s*[:=]\s*["']?\*
+  - id: WS-011
+    name: Cookie 安全属性关闭
+    severity: medium
+    description: Cookie 的 Secure 属性被关闭，可能经明文通道发送。
+    remediation: 开启 cookie_secure，并同时设置 HttpOnly 与 SameSite。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b(?:cookie_secure|secure_cookies?)\b\s*[:=]\s*["']?(?:false|0|off|no)\b
+  - id: WS-012
+    name: 目录列表开启
+    severity: medium
+    description: 自动目录索引开启，可能暴露备份、日志或未链接资源。
+    remediation: 关闭 autoindex 或 directory listing。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b(?:autoindex|directory_listing)\b\s*[:=]\s*["']?(?:on|true|yes|1)\b
+  - id: WS-013
+    name: 弱加密套件
+    severity: medium
+    description: TLS 配置包含 RC4、DES、3DES、NULL 或 EXPORT 等弱算法。
+    remediation: 移除弱套件，采用 AEAD 类现代加密套件。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b(?:cipher|cipher_suites?)\b\s*[:=]\s*.+(?:RC4|DES|3DES|NULL|EXPORT)
+  - id: WS-014
+    name: 弱口令
+    severity: high
+    description: 配置中的口令命中内置弱口令字典。
+    remediation: 立即更换为随机生成的高强度口令，并避免跨系统复用。
+    match:
+      type: weak_password
+      keys: [password, passwd, pwd, admin_password, db_password, service_password]
+      values:
+        - 'admin'
+        - 'admin123'
+        - 'admin@123'
+        - 'administrator'
+        - 'admin888'
+        - 'admin666'
+        - 'password'
+        - 'password1'
+        - 'password12'
+        - 'password123'
+        - 'password1234'
+        - 'passw0rd'
+        - 'p@ssw0rd'
+        - 'p@ssword'
+        - 'p@ss123'
+        - 'qwerty'
+        - 'qwerty123'
+        - 'qwertyuiop'
+        - '123456'
+        - '1234567'
+        - '12345678'
+        - '123456789'
+        - '1234567890'
+        - '111111'
+        - '000000'
+        - '666666'
+        - '888888'
+        - '123123'
+        - '112233'
+        - '121212'
+        - '654321'
+        - 'abc123'
+        - 'abc123456'
+        - 'abcd1234'
+        - 'a123456'
+        - '1q2w3e'
+        - '1q2w3e4r'
+        - '1qaz2wsx'
+        - 'qazwsx'
+        - 'zaq12wsx'
+        - 'iloveyou'
+        - 'monkey'
+        - 'dragon'
+        - 'sunshine'
+        - 'princess'
+        - 'football'
+        - 'baseball'
+        - 'superman'
+        - 'batman'
+        - 'letmein'
+        - 'welcome'
+        - 'welcome1'
+        - 'welcome123'
+        - 'master'
+        - 'shadow'
+        - 'michael'
+        - 'jennifer'
+        - 'trustno1'
+        - 'root'
+        - 'toor'
+        - 'root123'
+        - 'root@123'
+        - 'test'
+        - 'test123'
+        - 'testtest'
+        - 'guest'
+        - 'guest123'
+        - 'default'
+        - 'secret'
+        - 'secret123'
+        - 'changeme1'
+        - 'companyname'
+        - 'system'
+        - 'oracle'
+        - 'postgres'
+        - 'mysql'
+        - 'redis'
+        - 'elastic'
+        - 'tomcat'
+        - 'manager'
+        - 'support'
+        - 'service'
+        - 'temp123'
+        - 'temp1234'
+        - 'pass123'
+        - 'pass1234'
+        - 'passwd'
+        - 'passwd123'
+        - '123qwe'
+        - 'qwe123'
+        - 'asdf1234'
+        - 'zxcvbnm'
+        - '987654321'
+        - '159753'
+        - '147258369'
+        - '5201314'
+        - 'woaini'
+        - 'woaini1314'
+        - '123abc'
+        - '88888888'
+        - '66668888'
+        - '1qaz2wsx3edc'
+        - 'qweasdzxc'
+        - 'asdfghjkl'
+        - 'zxcvbnm123'
+        - 'password!'
+        - 'admin123!'
+        - 'root1234'
+        - 'test@123'
+  - id: WS-015
+    name: 默认管理员凭据
+    severity: high
+    description: 配置出现 admin:admin、root:root 等默认口令组合。
+    remediation: 删除默认凭据并强制首次登录修改口令。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b(?:admin|root)\s*[:=]\s*["']?(?:admin|root|123456|password)\b
+  - id: WS-016
+    name: PostgreSQL 信任认证
+    severity: high
+    description: 主机认证规则对任意地址使用 trust，数据库将不校验口令。
+    remediation: 改用 scram-sha-256 并限制来源地址。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\bhost\s+all\s+all\s+0\.0\.0\.0/0\s+trust\b
+  - id: WS-017
+    name: Elasticsearch 安全功能关闭
+    severity: high
+    description: xpack 安全功能被关闭，集群可能允许未认证访问。
+    remediation: 开启 xpack.security.enabled 并配置 TLS 与认证。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\bxpack\.security\.enabled["\']?\s*[:=]\s*["']?(?:false|0|off|no)\b
+  - id: WS-018
+    name: Redis 保护模式关闭
+    severity: high
+    description: Redis protected-mode 被关闭，未授权网络访问风险升高。
+    remediation: 开启保护模式，同时设置强口令并限制监听地址。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\bprotected-mode\b\s*[:=]?\s*["']?(?:no|false|off|0)\b
+  - id: WS-019
+    name: SSH 允许 root 口令登录
+    severity: high
+    description: SSH 允许 root 登录或口令认证，增加被暴力破解的风险。
+    remediation: 设置 PermitRootLogin no，并优先使用密钥认证。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b(?:PermitRootLogin|PasswordAuthentication)\b\s*[:=\s]\s*(?:yes|true|on)\b
+  - id: WS-020
+    name: MySQL 跳过权限表启动
+    severity: high
+    description: 配置启用 skip-grant-tables，任何用户都可绕过数据库认证。
+    remediation: 删除该参数，并通过正规流程恢复账号权限。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\bskip-grant-tables\b

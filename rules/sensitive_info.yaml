@@ -1,0 +1,84 @@
+category: sensitive_info
+version: 1
+rules:
+  - id: SI-001
+    name: 模拟手机号泄露
+    severity: medium
+    description: 配置中出现保留测试号段的模拟手机号，真实场景中可能泄露个人信息。
+    remediation: 移除联系方式，或改为脱敏占位符与受控配置。
+    match:
+      type: regex
+      pattern: >-
+        \b1990000\d{4}\b
+  - id: SI-002
+    name: 模拟身份证号泄露
+    severity: high
+    description: 配置中出现明确为虚构前缀的身份证格式数据，真实场景应视为高敏信息。
+    remediation: 立即移除身份证号，仅保留必要的脱敏标识。
+    match:
+      type: regex
+      pattern: >-
+        \b999999(?:19|20)\d{2}(?:0[1-9]|1[0-2])(?:0[1-9]|[12]\d|3[01])\d{3}[\dXx]\b
+  - id: SI-003
+    name: 内网 IP 地址
+    severity: medium
+    description: 配置暴露了 RFC1918 内网地址，可辅助攻击者绘制内部网络结构。
+    remediation: 将内部地址从配置样例与公开文件中移除，运行时注入。
+    match:
+      type: regex
+      pattern: >-
+        \b(?:10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(?:1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})\b
+  - id: SI-004
+    name: 内部服务域名
+    severity: low
+    description: 配置包含 .internal、.corp 或 .local 等内部域名。
+    remediation: 对外分享配置前替换为示例域名，避免泄露内部拓扑。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b[a-z0-9](?:[a-z0-9.-]*[a-z0-9])?\.(?:internal|corp|local)\b
+  - id: SI-005
+    name: 测试环境账号标识
+    severity: low
+    description: 配置中出现 qa/test 前缀的测试账号，可能被复用到生产环境。
+    remediation: 隔离测试账号并限制其权限，发布前移除测试配置。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b(?:qa|test)[_-](?:admin|user|account|bot|service)[_-]?[a-z0-9]*(?!["\']?\s*[:=])\b
+  - id: SI-006
+    name: 敏感日志路径泄露
+    severity: low
+    description: 配置暴露了内部敏感日志路径，可能包含令牌或认证记录。
+    remediation: 使用脱敏日志目录并限制日志读取权限。
+    match:
+      type: regex
+      pattern: >-
+        (?i)(?:/var/log|/opt/logs|/data/logs)/(?:private|internal|auth|token|secret)[\w./-]*
+  - id: SI-007
+    name: 内部邮箱账号
+    severity: low
+    description: 配置包含内部域名的邮箱地址，属于可辅助社工的组织信息。
+    remediation: 将内部邮箱替换为脱敏示例值，限制配置分发范围。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.(?:internal|corp|local)\b
+  - id: SI-008
+    name: 模拟员工编号
+    severity: low
+    description: 配置中出现员工编号格式的模拟值，可能用于账号枚举。
+    remediation: 移除员工编号，改用不可逆的内部标识。
+    match:
+      type: regex
+      pattern: >-
+        \bEMP-\d{6}\b
+  - id: SI-009
+    name: 内部管理入口地址
+    severity: medium
+    description: 配置暴露了内部管理后台或运维入口地址。
+    remediation: 对敏感入口启用认证与访问控制，公开配置中移除地址。
+    match:
+      type: regex
+      pattern: >-
+        (?i)\b(?:https?://)?(?:admin|ops|console|manage)[a-z0-9.-]*\.(?:internal|corp|local)\b

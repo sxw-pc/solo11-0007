@@ -1,0 +1,9 @@
+SIMULATED-SWITCH-FIRMWARE
+# FW-CONFIG-BEGIN
+password: <YOUR_PASSWORD>
+api_token: ${API_TOKEN}
+debug: false
+auth_required: true
+ssl_protocol: TLSv1.2
+# FW-CONFIG-END
+CLEAN-FIRMWARE-TRAILER

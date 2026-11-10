@@ -1,0 +1,18 @@
+# 检测结果与临时产物
+output/*
+!output/.gitkeep
+
+# Python 缓存与测试缓存
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 虚拟环境与 IDE 临时文件
+.venv/
+venv/
+.idea/
+.vscode/
+*.swp
+*.log

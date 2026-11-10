@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<config>
+  <database>
+    <host>localhost</host>
+    <password>${DB_PASSWORD}</password>
+    <allow_remote>localhost</allow_remote>
+  </database>
+  <security>
+    <admin_auth>true</admin_auth>
+    <anonymous_access>false</anonymous_access>
+    <ssl_version>TLSv1.2</ssl_version>
+  </security>
+</config>

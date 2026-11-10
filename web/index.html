@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="no-referrer">
+  <title>配置漏检工具箱 · 本地静态配置安全检测</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true">CL</span>
+      <div>
+        <strong>配置漏检工具箱</strong>
+        <span>Config Leak Checker</span>
+      </div>
+    </div>
+    <div class="topbar-meta">
+      <span class="pill">100% 离线</span>
+      <span class="pill muted">仅监听 127.0.0.1</span>
+    </div>
+  </header>
+
+  <main class="page">
+    <section class="hero">
+      <p class="eyebrow">LOCAL STATIC INSPECTION</p>
+      <h1>在凭据离开本机之前，<br><em>先发现它们。</em></h1>
+      <p class="lede">针对本地配置文件、备份归档与模拟固件的纯静态风险检测。无网络请求、无云端上传、无动态探测。</p>
+      <div class="notice">
+        <strong>合规提醒</strong>
+        <span>仅检测你本人所有或已获得书面授权的本地文件。工具仅做静态特征匹配，不提供解密或漏洞利用能力。</span>
+      </div>
+    </section>
+
+    <section class="panel scan-panel">
+      <div class="section-heading">
+        <div>
+          <span class="step">01</span>
+          <h2>选择本地检测目标</h2>
+        </div>
+        <span class="hint">支持目录、单文件、zip / tar / tar.gz / tar.bz2、模拟固件</span>
+      </div>
+      <form id="scanForm" class="scan-form" autocomplete="off">
+        <label class="sr-only" for="scanPath">本地文件或目录路径</label>
+        <div class="path-field">
+          <span aria-hidden="true">⌂</span>
+          <input id="scanPath" name="path" type="text"
+                 placeholder="例如：D:\backup\configs 或 /home/me/app/config.yaml" required>
+        </div>
+        <button id="scanBtn" class="button primary" type="submit">开始检测</button>
+      </form>
+      <div class="quick-paths">
+        <span>本地示例：</span>
+        <button class="text-button" data-path="fixtures/risky_samples">含风险样本</button>
+        <button class="text-button" data-path="fixtures/normal_samples">正常配置样本</button>
+        <button class="text-button" data-path="fixtures/archive_samples">归档样本</button>
+      </div>
+    </section>
+
+    <section id="progressCard" class="panel progress-card" hidden>
+      <div class="progress-top">
+        <div>
+          <span class="step">02</span>
+          <h2 id="progressTitle">正在准备检测</h2>
+        </div>
+        <strong id="progressPercent">0%</strong>
+      </div>
+      <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <span id="progressBar"></span>
+      </div>
+      <p id="progressMessage" class="progress-message">正在加载规则与文件…</p>
+    </section>
+
+    <section id="summarySection" class="summary-grid" hidden>
+      <article class="stat-card total">
+        <span>检测文件</span>
+        <strong id="statTotal">0</strong>
+        <small id="statScanned">已扫描 0 个目标</small>
+      </article>
+      <article class="stat-card high">
+        <span>高风险</span>
+        <strong id="statHigh">0</strong>
+        <small>凭据泄露 / 严重弱配置</small>
+      </article>
+      <article class="stat-card medium">
+        <span>中风险</span>
+        <strong id="statMedium">0</strong>
+        <small>敏感信息 / 需关注配置</small>
+      </article>
+      <article class="stat-card low">
+        <span>低风险</span>
+        <strong id="statLow">0</strong>
+        <small>内部信息 / 低危暴露</small>
+      </article>
+      <article class="stat-card muted-card">
+        <span>跳过文件</span>
+        <strong id="statSkipped">0</strong>
+        <small id="statRules">已加载 0 条规则</small>
+      </article>
+    </section>
+
+    <section id="resultsPanel" class="panel results-panel" hidden>
+      <div class="section-heading results-heading">
+        <div>
+          <span class="step">03</span>
+          <h2>风险结果与溯源</h2>
+        </div>
+        <div class="download-group">
+          <span>完整报告</span>
+          <button id="downloadFullJson" class="button small ghost" type="button">JSON</button>
+          <button id="downloadFullCsv" class="button small ghost" type="button">CSV</button>
+        </div>
+      </div>
+
+      <div class="filter-bar">
+        <label>
+          <span>风险等级</span>
+          <select id="filterSeverity">
+            <option value="">全部等级</option>
+            <option value="high">高风险</option>
+            <option value="medium">中风险</option>
+            <option value="low">低风险</option>
+          </select>
+        </label>
+        <label>
+          <span>风险类别</span>
+          <select id="filterCategory">
+            <option value="">全部类别</option>
+            <option value="hardcoded_credential">硬编码凭据</option>
+            <option value="weak_security">弱安全配置</option>
+            <option value="sensitive_info">敏感信息泄露</option>
+          </select>
+        </label>
+        <label>
+          <span>规则 ID</span>
+          <select id="filterRule"><option value="">全部规则</option></select>
+        </label>
+        <label class="grow">
+          <span>文件路径</span>
+          <input id="filterPath" type="search" placeholder="按路径筛选，例如 archive">
+        </label>
+        <div class="filter-actions">
+          <button id="applyFilters" class="button primary small" type="button">应用筛选</button>
+          <button id="resetFilters" class="button small ghost" type="button">重置</button>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>等级</th>
+              <th>规则</th>
+              <th>文件 / 行号</th>
+              <th>掩码片段</th>
+              <th>风险描述</th>
+              <th>次数</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+        <div id="emptyResults" class="empty-state" hidden>
+          <strong>当前筛选条件下没有风险</strong>
+          <span>可以调整筛选条件，或检测其他本地路径。</span>
+        </div>
+      </div>
+
+      <div class="filtered-export">
+        <span>导出当前筛选结果</span>
+        <button id="exportJson" class="button small" type="button">筛选报告 JSON</button>
+        <button id="exportCsv" class="button small" type="button">筛选报告 CSV</button>
+        <span class="hint">导出文件写入本地 output 目录</span>
+      </div>
+    </section>
+
+    <details id="skippedPanel" class="panel skipped-panel" hidden>
+      <summary>查看跳过文件与原因 <span id="skippedCount"></span></summary>
+      <ul id="skippedList"></ul>
+    </details>
+
+    <details class="panel rules-panel">
+      <summary>已加载规则概览 <span id="ruleSummary">0 条</span></summary>
+      <p class="hint">规则来自本地 rules 目录。新增 YAML 文件后，下一次检测会自动加载生效。</p>
+      <div id="ruleList" class="rule-list"></div>
+    </details>
+  </main>
+
+  <dialog id="detailDialog" class="detail-dialog">
+    <form method="dialog">
+      <button class="dialog-close" aria-label="关闭">×</button>
+    </form>
+    <p class="eyebrow">FINDING DETAIL</p>
+    <h2 id="detailTitle">风险详情</h2>
+    <div id="detailBody" class="detail-body"></div>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+  <footer class="footer">
+    <span>配置漏检工具箱 v1.0</span>
+    <span>纯本地静态检测 · 无网络请求 · 结果仅写入本地 output</span>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

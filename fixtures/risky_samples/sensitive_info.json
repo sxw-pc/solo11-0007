@@ -1,0 +1,11 @@
+{
+  "test_phone": "19900001111",
+  "test_id": "999999199001010011",
+  "db_host": "10.20.30.40",
+  "service_domain": "db.prod.corp.internal",
+  "admin_url": "https://admin.ops.corp.internal",
+  "test_account": "qa_admin_01",
+  "log_path": "/var/log/internal/token-dump.log",
+  "contact": "ops@example.corp.local",
+  "employee_id": "EMP-123456"
+}

@@ -1,0 +1,15 @@
+tls:
+  ssl_protocol: TLSv1.0
+admin:
+  credentials: "admin:admin"
+postgres:
+  hba_rule: "host all all 0.0.0.0/0 trust"
+elasticsearch:
+  "xpack.security.enabled": false
+redis:
+  protected-mode: no
+ssh:
+  PermitRootLogin: yes
+  PasswordAuthentication: yes
+mysql:
+  options: "--skip-grant-tables"

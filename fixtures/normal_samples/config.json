@@ -1,0 +1,16 @@
+{
+  "app": {
+    "debug": false,
+    "password": "",
+    "api_key": "${API_KEY}"
+  },
+  "server": {
+    "host": "127.0.0.1",
+    "auth_required": true,
+    "anonymous_access": false,
+    "file_mode": "640"
+  },
+  "tls": {
+    "min_version": "TLSv1.2"
+  }
+}

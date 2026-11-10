@@ -1,0 +1,14 @@
+[server]
+name = "demo-toml-service"
+debug = false
+auth_required = true
+file_mode = "640"
+session_timeout = 1800
+
+[ssl]
+protocol = "TLSv1.2"
+verify = true
+
+[credentials]
+password = "${SERVICE_PASSWORD}"
+token = "{{VAULT_TOKEN}}"

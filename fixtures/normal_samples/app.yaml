@@ -1,0 +1,20 @@
+app:
+  name: demo-service
+  environment: staging
+  debug: false
+  password: "${DB_PASSWORD}"
+  api_key: "<YOUR_API_KEY>"
+database:
+  host: localhost
+  port: 5432
+  password: ""
+  max_connections: 20
+tls:
+  min_version: TLSv1.2
+  verify: true
+server:
+  permissions: "640"
+  admin_auth: true
+  anonymous_access: false
+  cors_origins: https://app.example.test
+  session_timeout: 1800
